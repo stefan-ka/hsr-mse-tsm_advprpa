@@ -3,8 +3,6 @@ module ProgExercises.FS_2019_ProgExer05Prob_V01 where
 -- Develop some functions to work with order lists.
 -- Make use of higher-order functions and/or recursion.
 
-toBeImplemented = undefined
-
 type ArtName = String   -- name of article
 type Number = Int       -- number of ordered articles
 type Order = (ArtName, Number)
@@ -39,7 +37,7 @@ exa_myLookup =
   myLookup 39 [(5, 'a'), (39, 'b'), (7, 'c'), (39, 'd')] == 'b'
 
 myLookup :: Eq a => a -> [(a, b)] -> b
-myLookup = toBeImplemented
+myLookup num xs = snd (head (filter (\x -> fst x == num) xs))
 
 -- Given an order list and a pricing list, addPrices adds the prices
 -- according to the pricing list to the order list.
@@ -52,19 +50,25 @@ exa_addPrices =
      ("Unterlegscheibe M4",200,400)]
 
 addPrices :: [Order] -> [Pricing] -> [PricedOrder]
-addPrices = toBeImplemented
+addPrices os ps = map (\(name, num) -> (name, num, num * myLookup name ps)) os
 
 -- totalPrice determines the total price of an order list.
 exa_totalPrice =
   totalPrice (addPrices ol01 pl01) == 1400
 
 totalPrice :: [PricedOrder] -> Price
-totalPrice = toBeImplemented
+totalPrice pol = sum (map (\(_, _, price) -> price) pol)
+-- Alternative: totalPrice = foldr (\(_, _, p) accu -> accu + p) 0
 
 -- totalNumPrice determines the total number of items and the total price
 -- of an order list.
 totalNumPrice :: [PricedOrder] -> (Number, Price)
-totalNumPrice = toBeImplemented
+totalNumPrice pol = (totalNum pol, totalPrice pol)
+  where totalNum pol = sum(map (\(_, x, _) -> x) pol)
+
+totalNumPrice' :: [PricedOrder] -> (Number, Price)
+totalNumPrice' pol = (sum nums, sum prices)
+  where (_, nums, prices) = unzip3 pol
 
 -- Returns items that (for the number ordered) cost more than a given maxPrice.
 exa_tooExpensive =
@@ -73,7 +77,7 @@ exa_tooExpensive =
      ("Mutter M4",100,500)]
 
 tooExpensive :: Price -> [PricedOrder] -> [PricedOrder]
-tooExpensive = toBeImplemented
+tooExpensive mp pol = filter (\(_, _, price) -> price > mp) pol
 
 -- Adds an order to an order list.
 -- If the article name added already occurs in the order list,
@@ -85,7 +89,10 @@ exa_add =
      ("Unterlegscheibe M4", 200)]
 
 addOrder :: Order -> [Order] -> [Order]
-addOrder = toBeImplemented
+addOrder (name, num) ((name', num') : ol)
+  | name == name' = (name, num + num') : ol
+  | otherwise = (name', num') : addOrder (name, num) ol
+addOrder nameNum [] = [nameNum]
 
 -- addOrderList adds all orders of a new order list to an old order list.
 exa_addOrderList =
@@ -95,7 +102,7 @@ exa_addOrderList =
      ("Unterlegscheibe M4", 400)]
 
 addOrderList :: [Order] -> [Order] -> [Order]
-addOrderList = toBeImplemented
+addOrderList olNew olOld = foldr addOrder olOld olNew
 
 -- Removes an order with a given article name from a given order list.
 exa_removeOrder =
@@ -104,5 +111,8 @@ exa_removeOrder =
      ("Unterlegscheibe M4", 200)]
 
 removeOrder :: ArtName -> [Order] -> [Order]
-removeOrder = toBeImplemented
+removeOrder toDel xs = filter (\(name, _) -> name /= toDel) xs
+-- removeOrder toDel (x@(name, _) : xs)
+--   | toDel == name = xs
+--   | otherwise     = x : removeOrder toDel xs
 
